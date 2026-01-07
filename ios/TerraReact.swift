@@ -68,7 +68,7 @@ class TerraReact: NSObject {
 
     // terra instance managed
     private var terra: TerraManager?
-    
+
     // connection type translate
     private func connectionParse(connection: String) -> Connections? {
         switch connection {
@@ -168,14 +168,14 @@ class TerraReact: NSObject {
                 return CustomPermissions.INTERBEAT;
             case "SPEED":
                 return CustomPermissions.SPEED;
-            case "POWER":  
+            case "POWER":
                 return CustomPermissions.POWER;
             default:
                 return nil
         }
         return nil
     }
-    
+
     private func customPermissionsSet(customPermissions: [String]) -> Set<CustomPermissions> {
         var out: Set<CustomPermissions> = Set([])
 
@@ -199,7 +199,7 @@ class TerraReact: NSObject {
             }
         }
     }
-    
+
     @objc
     func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
@@ -224,7 +224,7 @@ class TerraReact: NSObject {
             resolve(["success": true, "userId": terra?.getUserId(type: connection) as? String])
         }
     }
-    
+
     // check connection
     @objc
     func checkAuth(_ connection: String, devID: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
@@ -235,13 +235,13 @@ class TerraReact: NSObject {
             resolve(["success": false])
         }
     }
-    
+
     // getters
     @objc
     func getBody(_ connection: String, startDate: Date, endDate: Date, latestReading: Bool, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getBody(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook, latestReading: latestReading){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -264,7 +264,7 @@ class TerraReact: NSObject {
     func getActivity(_ connection: String, startDate: Date, endDate: Date, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getActivity(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -287,7 +287,7 @@ class TerraReact: NSObject {
     func getMenstruation(_ connection: String, startDate: Date, endDate: Date, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getMenstruation(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -310,7 +310,7 @@ class TerraReact: NSObject {
     func getAthlete(_ connection: String, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getAthlete(type: connection, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -333,7 +333,7 @@ class TerraReact: NSObject {
     func getDaily(_ connection: String, startDate: Date, endDate: Date, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getDaily(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -351,12 +351,12 @@ class TerraReact: NSObject {
             resolve(["success": false, "data": nil, "error": "Invalid Connection Type"])
         }
     }
-    
+
     @objc
     func getSleep(_ connection: String, startDate: Date, endDate: Date, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getSleep(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -379,7 +379,7 @@ class TerraReact: NSObject {
     func getNutrition(_ connection: String, startDate: Date, endDate: Date, toWebhook: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
             terra?.getNutrition(type: connection, startDate: startDate, endDate: endDate, toWebhook: toWebhook){
-                (success, data, err) in 
+                (success, data, err) in
                 if let err = err {
                     resolve(["success": false, "data": nil, "error": self.errorMessage(err)])
                 }
@@ -404,12 +404,12 @@ class TerraReact: NSObject {
             resolve(["success": false, "data": nil, "error": "Invalid Connection Type"])
             return
         }
-        
+
         guard let activityPayload = convertToTerraActivityPayload(payload) else {
             resolve(["success": false, "data": nil, "error": "Invalid intput payload"])
             return
         }
-        
+
         if #available(iOS 14, *) {
             terra?.postActivity(type: connection, payload: activityPayload){
                 (success, err) in
@@ -424,7 +424,24 @@ class TerraReact: NSObject {
             resolve(["success": false, "error": "postActivity is only available for iOS 14 and above"])
         }
     }
-    
+
+    @objc
+    func postNutrition(_ connection: String, payload: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        guard let connection = connectionParse(connection: connection) else {
+            resolve(["success": false, "error": "Invalid Connection Type"])
+            return
+        }
+
+        guard let nutritionPayload = convertToTerraNutritionPayload(payload) else {
+            resolve(["success": false, "error": "Invalid input payload"])
+            return
+        }
+
+        terra?.postNutrition(type: connection, payload: nutritionPayload) { success in
+            resolve(["success": success, "error": NSNull()])
+        }
+    }
+
     // Freestyle glucose init
     @objc
     func readGlucoseData(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
@@ -561,7 +578,7 @@ class TerraReact: NSObject {
 					type: conn,
 					payload: data
 				){
-					(success, err) in 
+					(success, err) in
 					if let err = err {
 						resolve(["success": false, "error": self.errorMessage(err)])
 					}

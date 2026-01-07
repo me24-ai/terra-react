@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["HeartRateDataSample.ts"],"sourcesContent":["export interface HeartRateDataSample {\n  timestamp: string;\n  bpm: number;\n}\n"],"mappings":""}

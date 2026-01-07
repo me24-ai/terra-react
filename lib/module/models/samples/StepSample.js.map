@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["StepSample.ts"],"sourcesContent":["export interface StepSample {\n  timestamp: string;\n  steps: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

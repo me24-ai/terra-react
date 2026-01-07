@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["FloorsClimbedSample.ts"],"sourcesContent":["import { Option } from '../../helpers';\n\nexport interface FloorsClimbedSample {\n  timestamp: string;\n  floors_climbed: number;\n  timer_duration_seconds: Option<number>;\n}\n"],"mappings":""}

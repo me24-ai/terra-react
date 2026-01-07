@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["ActivityLevelSample.ts"],"sourcesContent":["import { ActivityLevel } from '../../enums/ActivityLevel';\n\nexport interface ActivityLevelSample {\n  timestamp: string;\n  level: ActivityLevel;\n}\n"],"mappings":""}

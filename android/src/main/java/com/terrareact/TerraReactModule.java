@@ -162,7 +162,7 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
             map.putString("error", "Unable to resolve current activity");
             promise.resolve(map);
             return;
-        }       
+        }
 
         Terra.Companion.instance(
             devID,
@@ -255,7 +255,7 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
             map.putString("error", "Please make sure Terra is instantiated with initTerra");
             return;
         }
-        
+
         if (parseConnection(connection) == null){
             map.putBoolean("success", false);
             map.putString("error", "Invalid Connection type passed");
@@ -306,7 +306,7 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
             map.putBoolean("success", success);
             if (data != null){
                 map.putString("data", gson.toJson(data));
-            }            
+            }
             if (error != null){
                 map.putString("error", error.getMessage());
             }
@@ -509,6 +509,11 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void postActivity(String connection, ReadableMap payload, Promise promise) {
         promise.reject("Unimplemented function for Android");
+    }
+
+    @ReactMethod
+    public void postNutrition(String connection, ReadableMap payload, Promise promise) {
+        promise.reject("postNutrition is not supported on Android in terra-react yet");
     }
 
     @ReactMethod

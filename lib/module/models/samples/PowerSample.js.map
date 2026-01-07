@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["PowerSample.ts"],"sourcesContent":["export interface PowerSample {\n  timestamp: string;\n  watts: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

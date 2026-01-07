@@ -103,6 +103,13 @@ RCT_EXTERN_METHOD(
     rejecter: (RCTPromiseRejectBlock)reject
 )
 
+RCT_EXTERN_METHOD(
+    postNutrition: (NSString *)connection
+    payload: (NSDictionary *)payload
+    resolve: (RCTPromiseResolveBlock)resolve
+    rejecter: (RCTPromiseRejectBlock)reject
+)
+
 // Freestyle glucose init
 RCT_EXTERN_METHOD(
     readGlucoseData:(RCTPromiseResolveBlock)resolve

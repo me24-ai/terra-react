@@ -1,0 +1,1 @@
+{"version":3,"names":["Connections"],"sources":["Connections.ts"],"sourcesContent":["export enum Connections {\n  'APPLE_HEALTH',\n  'FREESTYLE_LIBRE',\n  'GOOGLE',\n  'SAMSUNG',\n  'HEALTH_CONNECT',\n}\n"],"mappings":"AAAA,WAAYA,WAAW,0BAAXA,WAAW;EAAXA,WAAW,CAAXA,WAAW;EAAXA,WAAW,CAAXA,WAAW;EAAXA,WAAW,CAAXA,WAAW;EAAXA,WAAW,CAAXA,WAAW;EAAXA,WAAW,CAAXA,WAAW;EAAA,OAAXA,WAAW;AAAA"}

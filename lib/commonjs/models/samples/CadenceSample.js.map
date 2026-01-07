@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["CadenceSample.ts"],"sourcesContent":["export interface CadenceSample {\n  timestamp: string;\n  cadence_rpm: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["HeartRateVariabilityDataSampleSDNN.ts"],"sourcesContent":["export interface HeartRateVariabilityDataSampleSDNN {\n  timestamp: string;\n  hrv_sdnn: number;\n}\n"],"mappings":""}

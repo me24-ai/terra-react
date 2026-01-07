@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["Vo2MaxSample.ts"],"sourcesContent":["export interface Vo2MaxSample {\n  timestamp: string;\n  vo2max_ml_per_min_per_kg: number;\n}\n"],"mappings":""}

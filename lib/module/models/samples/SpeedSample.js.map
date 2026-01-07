@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["SpeedSample.ts"],"sourcesContent":["export interface SpeedSample {\n  timestamp: string;\n  speed_meters_per_second: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

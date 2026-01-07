@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["METSample.ts"],"sourcesContent":["export interface METSample {\n  timestamp: string;\n  level: number;\n}\n"],"mappings":""}

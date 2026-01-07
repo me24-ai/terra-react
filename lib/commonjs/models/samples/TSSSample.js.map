@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["TSSSample.ts"],"sourcesContent":["import { Option } from '../../helpers';\n\nexport interface TSSSample {\n  planned: number;\n  actual: number;\n  method: string;\n  intensity_factor_planned: Option<number>;\n  intensity_factor_actual: Option<number>;\n  normalized_power_watts: Option<number>;\n}\n"],"mappings":""}

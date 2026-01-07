@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["PositionSample.ts"],"sourcesContent":["export interface PositionSample {\n  timestamp: string;\n  coords_lat_lng_deg: [number, number];\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

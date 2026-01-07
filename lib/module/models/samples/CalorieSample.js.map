@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["CalorieSample.ts"],"sourcesContent":["import { Option } from '../../helpers';\n\nexport interface CalorieSample {\n  timestamp: string;\n  calories: number;\n  timer_duration_seconds: Option<number>;\n}\n"],"mappings":""}

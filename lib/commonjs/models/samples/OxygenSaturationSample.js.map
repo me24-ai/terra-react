@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["OxygenSaturationSample.ts"],"sourcesContent":["export interface OxygenSaturationSample {\n  timestamp: string;\n  percentage: number;\n}\n"],"mappings":""}

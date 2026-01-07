@@ -2,6 +2,7 @@ import { NativeModules, Platform } from 'react-native';
 import { CustomPermissions as CustomPermissions_ } from './enums/CustomPermissions';
 import { Connections as Connections_ } from './enums/Connections';
 import { Activity as TerraActivityPayload } from './models/Activity';
+import { TerraNutritionPayload } from './models/Nutrition';
 import { TerraPlannedWorkout } from './models/PlannedWorkouts';
 
 const LINKING_ERROR =
@@ -365,6 +366,30 @@ export function postActivity(
 ): Promise<SuccessMessage> {
   return new Promise<SuccessMessage>((resolve, reject) => {
     TerraReact.postActivity(ConnectionToString(connection), payload)
+      .then((d: any) => {
+        resolve({ success: d.success, error: d.error } as SuccessMessage);
+      })
+      .catch((e: Error) => {
+        reject(e);
+      });
+  });
+}
+
+/*
+@Only available on iOS
+*/
+export function postNutrition(
+  connection: Connections_,
+  payload: TerraNutritionPayload
+): Promise<SuccessMessage> {
+  if (Platform.OS !== 'ios') {
+    return Promise.resolve({
+      success: false,
+      error: 'postNutrition is only available on iOS',
+    });
+  }
+  return new Promise<SuccessMessage>((resolve, reject) => {
+    TerraReact.postNutrition(ConnectionToString(connection), payload)
       .then((d: any) => {
         resolve({ success: d.success, error: d.error } as SuccessMessage);
       })

@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["DistanceSample.ts"],"sourcesContent":["export interface DistanceSample {\n  timestamp: string;\n  distance_meters: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}

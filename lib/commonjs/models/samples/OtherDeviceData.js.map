@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["OtherDeviceData.ts"],"sourcesContent":["import { Option } from '../../helpers';\n\nexport interface OtherDeviceData {\n  name: Option<string>;\n  manufacturer: Option<string>;\n  serial_number: Option<string>;\n  software_version: Option<string>;\n  hardware_version: Option<string>;\n}\n"],"mappings":""}

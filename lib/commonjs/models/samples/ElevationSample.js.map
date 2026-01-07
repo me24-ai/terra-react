@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["ElevationSample.ts"],"sourcesContent":["export interface ElevationSample {\n  timestamp: string;\n  elev_meters: number;\n  timer_duration_seconds: number;\n}\n"],"mappings":""}
