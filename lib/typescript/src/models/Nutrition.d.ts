@@ -2,6 +2,8 @@ export type TerraNutritionPayload = {
     metadata?: {
         start_time?: string | null;
         end_time?: string | null;
+        /** Optional client-provided identifier (e.g. ME24 guid) for round-tripping. */
+        me24_id?: string | null;
     } | null;
     summary?: {
         macros?: {

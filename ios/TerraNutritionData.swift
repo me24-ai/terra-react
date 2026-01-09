@@ -13,6 +13,15 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
     let metadataDict = data["metadata"] as? NSDictionary
     let summaryDict = data["summary"] as? NSDictionary
 
+    var meals: [TerraMealData] = []
+    if let me24Id = metadataDict?["me24_id"] as? String {
+        if !me24Id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            var meal = TerraMealData()
+            meal.id = me24Id
+            meals.append(meal)
+        }
+    }
+
     let meta = TerraNutritonMetaData(
         start_time: metadataDict?["start_time"] as? String,
         end_time: metadataDict?["end_time"] as? String
@@ -43,7 +52,7 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
     )
 
     return TerraNutritionData(
-        meals: [],
+        meals: meals,
         summary: summary,
         metadata: meta,
         drink_samples: []
