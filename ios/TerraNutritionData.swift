@@ -29,6 +29,58 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
 
     let macrosDict = (summaryDict?["macros"] as? NSDictionary)
 
+    var micros: TerraMicrosModel? = nil
+    if let microsDict = summaryDict?["micros"] as? NSDictionary {
+        micros = TerraMicrosModel(
+            biotin_mg: toDouble(microsDict["biotin_mg"]),
+            caffeine_mg: toDouble(microsDict["caffeine_mg"]),
+            chloride_mg: toDouble(microsDict["chloride_mg"]),
+            chromium_mg: toDouble(microsDict["chromium_mg"]),
+            copper_mg: toDouble(microsDict["copper_mg"]),
+            calcium_mg: toDouble(microsDict["calcium_mg"]),
+            folate_mg: toDouble(microsDict["folate_mg"]),
+            folic_acid_mg: toDouble(microsDict["folic_acid_mg"]),
+            iodine_mg: toDouble(microsDict["iodine_mg"]),
+            iron_mg: toDouble(microsDict["iron_mg"]),
+            magnesium_mg: toDouble(microsDict["magnesium_mg"]),
+            manganese_mg: toDouble(microsDict["manganese_mg"]),
+            molybdenum_mg: toDouble(microsDict["molybdenum_mg"]),
+            niacin_mg: toDouble(microsDict["niacin_mg"]),
+            pantothenic_acid_mg: toDouble(microsDict["pantothenic_acid_mg"]),
+            phosphorus_mg: toDouble(microsDict["phosphorus_mg"]),
+            potassium_mg: toDouble(microsDict["potassium_mg"]),
+            riboflavin_mg: toDouble(microsDict["riboflavin_mg"]),
+            selenium_mg: toDouble(microsDict["selenium_mg"]),
+            thiamin_mg: toDouble(microsDict["thiamin_mg"]),
+            vitamin_A_mg: toDouble(microsDict["vitamin_A_mg"]),
+            vitamin_B12_mg: toDouble(microsDict["vitamin_B12_mg"]),
+            vitamin_B6_mg: toDouble(microsDict["vitamin_B6_mg"]),
+            vitamin_C_mg: toDouble(microsDict["vitamin_C_mg"]),
+            vitamin_D_mg: toDouble(microsDict["vitamin_D_mg"]),
+            vitamin_E_mg: toDouble(microsDict["vitamin_E_mg"]),
+            vitamin_K_mg: toDouble(microsDict["vitamin_K_mg"]),
+            vitamin_D3_mg: toDouble(microsDict["vitamin_D3_mg"]),
+            vitamin_D2_mg: toDouble(microsDict["vitamin_D2_mg"]),
+            zinc_mg: toDouble(microsDict["zinc_mg"]),
+            starch_g: toDouble(microsDict["starch_g"]),
+            omega3_g: toDouble(microsDict["omega3_g"]),
+            omega6_g: toDouble(microsDict["omega6_g"]),
+            cystine_g: toDouble(microsDict["cystine_g"]),
+            histidine_g: toDouble(microsDict["histidine_g"]),
+            isoleucine_g: toDouble(microsDict["isoleucine_g"]),
+            leucine_g: toDouble(microsDict["leucine_g"]),
+            lysine_g: toDouble(microsDict["lysine_g"]),
+            methionine_g: toDouble(microsDict["methionine_g"]),
+            phenylalanine_g: toDouble(microsDict["phenylalanine_g"]),
+            threonine_g: toDouble(microsDict["threonine_g"]),
+            tryptophan_g: toDouble(microsDict["tryptophan_g"]),
+            tyrosine_g: toDouble(microsDict["tyrosine_g"]),
+            valine_g: toDouble(microsDict["valine_g"]),
+            monounsaturated_fat_g: toDouble(microsDict["monounsaturated_fat_g"]),
+            polyunsaturated_fat_g: toDouble(microsDict["polyunsaturated_fat_g"])
+        )
+    }
+
     let macros = TerraMacrosModel(
         sodium_mg: toDouble(macrosDict?["sodium_mg"]),
         protein_g: toDouble(macrosDict?["protein_g"]),
@@ -46,7 +98,7 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
 
     let summary = TerraNutritonSummary(
         macros: macros,
-        micros: nil,
+        micros: micros,
         water_ml: toDouble(summaryDict?["water_ml"]),
         drink_ml: toDouble(summaryDict?["drink_ml"])
     )
