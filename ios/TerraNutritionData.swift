@@ -59,9 +59,11 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
             vitamin_D_mg: toDouble(microsDict["vitamin_D_mg"]),
             vitamin_E_mg: toDouble(microsDict["vitamin_E_mg"]),
             vitamin_K_mg: toDouble(microsDict["vitamin_K_mg"]),
+            zinc_mg: toDouble(microsDict["zinc_mg"]),
+            monounsaturated_fat_g: toDouble(microsDict["monounsaturated_fat_g"]),
+            polyunsaturated_fat_g: toDouble(microsDict["polyunsaturated_fat_g"]),
             vitamin_D3_mg: toDouble(microsDict["vitamin_D3_mg"]),
             vitamin_D2_mg: toDouble(microsDict["vitamin_D2_mg"]),
-            zinc_mg: toDouble(microsDict["zinc_mg"]),
             starch_g: toDouble(microsDict["starch_g"]),
             omega3_g: toDouble(microsDict["omega3_g"]),
             omega6_g: toDouble(microsDict["omega6_g"]),
@@ -75,9 +77,7 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
             threonine_g: toDouble(microsDict["threonine_g"]),
             tryptophan_g: toDouble(microsDict["tryptophan_g"]),
             tyrosine_g: toDouble(microsDict["tyrosine_g"]),
-            valine_g: toDouble(microsDict["valine_g"]),
-            monounsaturated_fat_g: toDouble(microsDict["monounsaturated_fat_g"]),
-            polyunsaturated_fat_g: toDouble(microsDict["polyunsaturated_fat_g"])
+            valine_g: toDouble(microsDict["valine_g"])
         )
     }
 
