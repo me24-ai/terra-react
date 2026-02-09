@@ -2,6 +2,7 @@ import { CustomPermissions as CustomPermissions_ } from './enums/CustomPermissio
 import { Connections as Connections_ } from './enums/Connections';
 import { Activity as TerraActivityPayload } from './models/Activity';
 import { TerraNutritionPayload } from './models/Nutrition';
+import { TerraBodyPayload } from './models/Body';
 import { TerraPlannedWorkout } from './models/PlannedWorkouts';
 export type GetUserId = {
     success: boolean;
@@ -34,6 +35,7 @@ export declare function getSleep(connection: Connections_, startDate: Date, endD
 export declare function getAthlete(connection: Connections_, toWebhook?: boolean): any;
 export declare function postActivity(connection: Connections_, payload: TerraActivityPayload): Promise<SuccessMessage>;
 export declare function postNutrition(connection: Connections_, payload: TerraNutritionPayload): Promise<SuccessMessage>;
+export declare function postBody(connection: Connections_, payload: TerraBodyPayload): Promise<SuccessMessage>;
 export declare function getPlannedWorkouts<T = any>(connection: Connections_): Promise<ListDataMessage<T>>;
 export declare function deletePlannedWorkout(connection: Connections_, id: string): Promise<SuccessMessage>;
 export declare function completePlannedWorkout(connection: Connections_, id: string, at?: Date): Promise<SuccessMessage>;
@@ -45,6 +47,8 @@ export declare function isHealthConnectAvailable(): Promise<boolean>;
 export declare function grantedPermissions(): Promise<Array<string>>;
 export declare function setIgnoredSources(ignoredSources: Array<String>): void;
 export type Activity = TerraActivityPayload;
+export type Body = TerraBodyPayload;
 export { Connections } from './enums/Connections';
 export { CustomPermissions } from './enums/CustomPermissions';
 export * from './models/PlannedWorkouts';
+export type { TerraBodyPayload } from './models/Body';

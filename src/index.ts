@@ -3,6 +3,7 @@ import { CustomPermissions as CustomPermissions_ } from './enums/CustomPermissio
 import { Connections as Connections_ } from './enums/Connections';
 import { Activity as TerraActivityPayload } from './models/Activity';
 import { TerraNutritionPayload } from './models/Nutrition';
+import { TerraBodyPayload } from './models/Body';
 import { TerraPlannedWorkout } from './models/PlannedWorkouts';
 
 const LINKING_ERROR =
@@ -398,6 +399,31 @@ export function postNutrition(
       });
   });
 }
+
+/*
+@Only available on iOS
+*/
+export function postBody(
+  connection: Connections_,
+  payload: TerraBodyPayload
+): Promise<SuccessMessage> {
+  if (Platform.OS !== 'ios') {
+    return Promise.resolve({
+      success: false,
+      error: 'postBody is only available on iOS',
+    });
+  }
+
+  return new Promise<SuccessMessage>((resolve, reject) => {
+    TerraReact.postBody(ConnectionToString(connection), payload)
+      .then((d: any) => {
+        resolve({ success: d.success, error: d.error } as SuccessMessage);
+      })
+      .catch((e: Error) => {
+        reject(e);
+      });
+  });
+}
 export function getPlannedWorkouts<T = any>(
   connection: Connections_
 ): Promise<ListDataMessage<T>> {
@@ -517,6 +543,8 @@ export function setIgnoredSources(ignoredSources: Array<String>): void {
 }
 
 export type Activity = TerraActivityPayload;
+export type Body = TerraBodyPayload;
 export { Connections } from './enums/Connections';
 export { CustomPermissions } from './enums/CustomPermissions';
 export * from './models/PlannedWorkouts';
+export type { TerraBodyPayload } from './models/Body';

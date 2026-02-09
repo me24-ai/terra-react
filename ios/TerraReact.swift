@@ -442,6 +442,23 @@ class TerraReact: NSObject {
         }
     }
 
+    @objc
+    func postBody(_ connection: String, payload: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        guard let connection = connectionParse(connection: connection) else {
+            resolve(["success": false, "error": "Invalid Connection Type"])
+            return
+        }
+
+        guard let bodyPayload = payload as? [String: Any] else {
+            resolve(["success": false, "error": "Invalid input payload"])
+            return
+        }
+
+        terra?.postBody(type: connection, payload: bodyPayload) { success in
+            resolve(["success": success, "error": NSNull()])
+        }
+    }
+
     // Freestyle glucose init
     @objc
     func readGlucoseData(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
