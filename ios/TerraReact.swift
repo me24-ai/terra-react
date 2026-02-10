@@ -449,7 +449,7 @@ class TerraReact: NSObject {
             return
         }
 
-        guard let bodyPayload = payload as? [String: Any] else {
+        guard let bodyPayload = convertToTerraBodyPayload(payload) else {
             resolve(["success": false, "error": "Invalid input payload"])
             return
         }
