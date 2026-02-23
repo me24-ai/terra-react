@@ -181,7 +181,7 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void initConnection(String connection, String token, Boolean schedulerOn, ReadableArray customPermissions, String startIntent, Promise promise){
+    public void initConnection(String connection, String token, Boolean schedulerOn, ReadableArray customPermissions, String startIntent, ReadableArray customWritePermissions, Promise promise){
         WritableMap map = new WritableNativeMap();
         if (token == null){
             map.putBoolean("success", false);
@@ -202,12 +202,22 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
             return;
         }
 
+        // Merge read and write permissions into a single set (Health Connect uses unified permissions)
         HashSet<CustomPermissions> cPermissions = new HashSet<>();
         for (Object customPermission: customPermissions.toArrayList()){
             if (customPermission == null && parseCustomPermission((String) customPermission) == null){
                 continue;
             }
             cPermissions.add(parseCustomPermission((String) customPermission));
+        }
+        if (customWritePermissions != null) {
+            for (Object writePermission : customWritePermissions.toArrayList()) {
+                if (writePermission == null) continue;
+                CustomPermissions parsed = parseCustomPermission((String) writePermission);
+                if (parsed != null) {
+                    cPermissions.add(parsed);
+                }
+            }
         }
 
         this.terra.initConnection(Objects.requireNonNull(parseConnection(connection)), token, Objects.requireNonNull(this.getCurrentActivity()), cPermissions, schedulerOn, startIntent,

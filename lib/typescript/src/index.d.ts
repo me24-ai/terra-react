@@ -23,7 +23,7 @@ export interface ListDataMessage<T = any> {
     error?: string | null;
 }
 export declare function initTerra(devID: string, referenceId: string | null): Promise<SuccessMessage>;
-export declare function initConnection(connection: Connections_, token: string, schedulerOn: boolean, customPermissions_?: CustomPermissions_[], startIntent?: string | null): Promise<SuccessMessage>;
+export declare function initConnection(connection: Connections_, token: string, schedulerOn: boolean, customPermissions_?: CustomPermissions_[], startIntent?: string | null, customWritePermissions_?: CustomPermissions_[]): Promise<SuccessMessage>;
 export declare function checkAuth(connection: Connections_, devID: string): Promise<Pick<SuccessMessage, 'success'>>;
 export declare function getUserId(connection: Connections_): Promise<GetUserId>;
 export declare function getBody(connection: Connections_, startDate: Date, endDate: Date, latestReading?: boolean, toWebhook?: boolean): Promise<DataMessage>;

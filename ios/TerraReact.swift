@@ -4,6 +4,7 @@
 
 import Foundation
 import TerraiOS
+import HealthKit
 
 @objc(TerraReact)
 class TerraReact: NSObject {
@@ -186,6 +187,121 @@ class TerraReact: NSObject {
         return out
     }
 
+    // MARK: - HealthKit write permission mapping
+
+    private func hkSampleType(for permission: String) -> HKSampleType? {
+        switch permission {
+        case "WEIGHT":
+            return HKQuantityType.quantityType(forIdentifier: .bodyMass)
+        case "HEIGHT":
+            return HKQuantityType.quantityType(forIdentifier: .height)
+        case "BODY_FAT":
+            return HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage)
+        case "BMI":
+            return HKQuantityType.quantityType(forIdentifier: .bodyMassIndex)
+        case "LEAN_BODY_MASS":
+            return HKQuantityType.quantityType(forIdentifier: .leanBodyMass)
+        case "CALORIES":
+            return HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)
+        case "BASAL_ENERGY_BURNED":
+            return HKQuantityType.quantityType(forIdentifier: .basalEnergyBurned)
+        case "STEPS":
+            return HKQuantityType.quantityType(forIdentifier: .stepCount)
+        case "EXERCISE_DISTANCE":
+            return HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)
+        case "FLIGHTS_CLIMBED":
+            return HKQuantityType.quantityType(forIdentifier: .flightsClimbed)
+        case "HEART_RATE":
+            return HKQuantityType.quantityType(forIdentifier: .heartRate)
+        case "RESTING_HEART_RATE":
+            return HKQuantityType.quantityType(forIdentifier: .restingHeartRate)
+        case "HEART_RATE_VARIABILITY":
+            return HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)
+        case "VO2MAX":
+            return HKQuantityType.quantityType(forIdentifier: .vo2Max)
+        case "BLOOD_PRESSURE":
+            return HKCorrelationType.correlationType(forIdentifier: .bloodPressure)
+        case "BLOOD_GLUCOSE":
+            return HKQuantityType.quantityType(forIdentifier: .bloodGlucose)
+        case "BODY_TEMPERATURE":
+            return HKQuantityType.quantityType(forIdentifier: .bodyTemperature)
+        case "OXYGEN_SATURATION":
+            return HKQuantityType.quantityType(forIdentifier: .oxygenSaturation)
+        case "RESPIRATORY_RATE":
+            return HKQuantityType.quantityType(forIdentifier: .respiratoryRate)
+        case "SLEEP_ANALYSIS":
+            return HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)
+        case "MINDFULNESS":
+            return HKCategoryType.categoryType(forIdentifier: .mindfulSession)
+        case "NUTRITION_CALORIES":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed)
+        case "NUTRITION_PROTEIN":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryProtein)
+        case "NUTRITION_CARBOHYDRATES":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryCarbohydrates)
+        case "NUTRITION_FAT_TOTAL":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryFatTotal)
+        case "NUTRITION_FIBRE":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryFiber)
+        case "NUTRITION_SUGAR":
+            return HKQuantityType.quantityType(forIdentifier: .dietarySugar)
+        case "NUTRITION_SODIUM":
+            return HKQuantityType.quantityType(forIdentifier: .dietarySodium)
+        case "NUTRITION_CHOLESTEROL":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryCholesterol)
+        case "NUTRITION_WATER":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryWater)
+        case "NUTRITION_VITAMIN_A":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryVitaminA)
+        case "NUTRITION_VITAMIN_C":
+            return HKQuantityType.quantityType(forIdentifier: .dietaryVitaminC)
+        case "SPEED":
+            if #available(iOS 16.0, *) {
+                return HKQuantityType.quantityType(forIdentifier: .runningSpeed)
+            }
+            return nil
+        case "POWER":
+            if #available(iOS 16.0, *) {
+                return HKQuantityType.quantityType(forIdentifier: .runningPower)
+            }
+            return nil
+        case "WORKOUT_TYPES":
+            return HKWorkoutType.workoutType()
+        case "ACTIVE_DURATIONS":
+            return HKQuantityType.quantityType(forIdentifier: .appleExerciseTime)
+        default:
+            return nil
+        }
+    }
+
+    private func requestHealthKitWritePermissions(_ permissions: [String], completion: @escaping (Bool) -> Void) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            completion(false)
+            return
+        }
+
+        let store = HKHealthStore()
+        var writeTypes = Set<HKSampleType>()
+
+        for permission in permissions {
+            if let sampleType = hkSampleType(for: permission) {
+                writeTypes.insert(sampleType)
+            }
+        }
+
+        guard !writeTypes.isEmpty else {
+            completion(true)
+            return
+        }
+
+        store.requestAuthorization(toShare: writeTypes, read: nil) { success, error in
+            if let error = error {
+                print("[TerraReact] HealthKit write authorization error: \(error.localizedDescription)")
+            }
+            completion(success)
+        }
+    }
+
     // initialize
     @objc
     func initTerra(_ devID: String, referenceId: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
@@ -201,13 +317,21 @@ class TerraReact: NSObject {
     }
 
     @objc
-    func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
+    func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
+            let writeTypes = customWritePermissions.isEmpty ? [] : customWritePermissions
             terra?.initConnection(type: connection, token: token, customReadTypes: customPermissionsSet(customPermissions: customPermissions), schedulerOn: schedulerOn, completion: {success, error in
                     if let error = error{
                         resolve(["success": success, "error": self.errorMessage(error)])
+                        return
                     }
-                    else{
+
+                    // If write permissions were requested, ask HealthKit directly
+                    if !writeTypes.isEmpty {
+                        self.requestHealthKitWritePermissions(writeTypes) { writeSuccess in
+                            resolve(["success": success])
+                        }
+                    } else {
                         resolve(["success": success])
                     }
                 }

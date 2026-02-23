@@ -21,6 +21,7 @@ RCT_EXTERN_METHOD(
     schedulerOn: (BOOL)schedulerOn
     customPermissions: (NSArray *)customPermissions
     startIntent: (NSString *)startIntent
+    customWritePermissions: (NSArray *)customWritePermissions
     resolve: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject
 )

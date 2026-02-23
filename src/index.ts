@@ -165,14 +165,16 @@ export function initConnection(
   token: string,
   schedulerOn: boolean,
   customPermissions_: CustomPermissions_[] = [],
-  startIntent: string | null = null
+  startIntent: string | null = null,
+  customWritePermissions_: CustomPermissions_[] = []
 ): Promise<SuccessMessage> {
   return TerraReact.initConnection(
     ConnectionToString(connection),
     token,
     schedulerOn,
     customPermissions_.map((p) => CustomPermissions_ToString(p)),
-    startIntent
+    startIntent,
+    customWritePermissions_.map((p) => CustomPermissions_ToString(p))
   );
 }
 
