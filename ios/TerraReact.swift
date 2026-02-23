@@ -319,23 +319,34 @@ class TerraReact: NSObject {
     @objc
     func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
-            let writeTypes = customWritePermissions.isEmpty ? [] : customWritePermissions
-            terra?.initConnection(type: connection, token: token, customReadTypes: customPermissionsSet(customPermissions: customPermissions), schedulerOn: schedulerOn, completion: {success, error in
-                    if let error = error{
-                        resolve(["success": success, "error": self.errorMessage(error)])
-                        return
-                    }
+            // Build HK type sets for a single combined authorization dialog
+            let writeHKTypes: Set<HKSampleType> = Set(customWritePermissions.compactMap { hkSampleType(for: $0) })
+            let readHKTypes: Set<HKObjectType> = Set(customPermissions.compactMap { hkSampleType(for: $0) as HKObjectType? })
 
-                    // If write permissions were requested, ask HealthKit directly
-                    if !writeTypes.isEmpty {
-                        self.requestHealthKitWritePermissions(writeTypes) { writeSuccess in
-                            resolve(["success": success])
+            let doInitConnection = {
+                self.terra?.initConnection(type: connection, token: token, customReadTypes: self.customPermissionsSet(customPermissions: customPermissions), schedulerOn: schedulerOn, completion: {success, error in
+                        if let error = error{
+                            resolve(["success": success, "error": self.errorMessage(error)])
+                            return
                         }
-                    } else {
                         resolve(["success": success])
                     }
+                )
+            }
+
+            // Request BOTH read + write in one combined HealthKit dialog
+            // so the user sees a single sheet with "Allow to read" AND "Allow to write".
+            // Then Terra's initConnection will find permissions already granted.
+            if !writeHKTypes.isEmpty || !readHKTypes.isEmpty, HKHealthStore.isHealthDataAvailable() {
+                let store = HKHealthStore()
+                store.requestAuthorization(toShare: writeHKTypes, read: readHKTypes) { _, _ in
+                    DispatchQueue.main.async {
+                        doInitConnection()
+                    }
                 }
-            )
+            } else {
+                doInitConnection()
+            }
         }
         else {
             resolve(["success", false, "error", "Invalid Connection Type"])

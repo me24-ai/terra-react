@@ -46,6 +46,22 @@ export declare function openHealthConnect(): void;
 export declare function isHealthConnectAvailable(): Promise<boolean>;
 export declare function grantedPermissions(): Promise<Array<string>>;
 export declare function setIgnoredSources(ignoredSources: Array<String>): void;
+export type HealthKitPermissionStatus = 'authorized' | 'denied' | 'not_determined' | 'unsupported' | 'unknown';
+export type HealthKitPermissionsResult = {
+    success: boolean;
+    error?: string;
+    write?: Record<string, HealthKitPermissionStatus>;
+};
+/**
+ * iOS only – returns the current HealthKit **write** authorization status
+ * for every type the app may write.
+ */
+export declare function getAllHealthKitPermissions(): Promise<HealthKitPermissionsResult>;
+/**
+ * iOS only – requests HealthKit **write** authorization for every type the
+ * app may write. Returns `{ success: true }` if the system dialog was shown.
+ */
+export declare function requestAllHealthKitPermissions(): Promise<SuccessMessage>;
 export type Activity = TerraActivityPayload;
 export type Body = TerraBodyPayload;
 export { Connections } from './enums/Connections';
