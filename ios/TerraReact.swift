@@ -181,7 +181,9 @@ class TerraReact: NSObject {
         var out: Set<CustomPermissions> = Set([])
 
         for permission in customPermissions {
-            out.insert(customPermissionParse(cPermission: permission)!)
+            if let parsed = customPermissionParse(cPermission: permission) {
+                out.insert(parsed)
+            }
         }
 
         return out
@@ -274,6 +276,32 @@ class TerraReact: NSObject {
         }
     }
 
+    /// Maps a permission string to an HKObjectType for **read** authorization.
+    /// Covers characteristic types and other non-sample types that `hkSampleType` cannot handle.
+    private func hkReadType(for permission: String) -> HKObjectType? {
+        // First try the sample-type mapper (covers the majority)
+        if let sampleType = hkSampleType(for: permission) {
+            return sampleType as HKObjectType
+        }
+        // Handle non-sample types used for reads only
+        switch permission {
+        case "GENDER":
+            return HKCharacteristicType.characteristicType(forIdentifier: .biologicalSex)
+        case "DATE_OF_BIRTH":
+            return HKCharacteristicType.characteristicType(forIdentifier: .dateOfBirth)
+        case "ACTIVITY_SUMMARY":
+            return HKActivitySummaryType.activitySummaryType()
+        case "MENSTRUATION":
+            return HKCategoryType.categoryType(forIdentifier: .menstrualFlow)
+        case "INTERBEAT":
+            return HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)
+        case "SWIMMING_SUMMARY":
+            return HKQuantityType.quantityType(forIdentifier: .swimmingStrokeCount)
+        default:
+            return nil
+        }
+    }
+
     private func requestHealthKitWritePermissions(_ permissions: [String], completion: @escaping (Bool) -> Void) {
         guard HKHealthStore.isHealthDataAvailable() else {
             completion(false)
@@ -294,11 +322,13 @@ class TerraReact: NSObject {
             return
         }
 
-        store.requestAuthorization(toShare: writeTypes, read: nil) { success, error in
-            if let error = error {
-                print("[TerraReact] HealthKit write authorization error: \(error.localizedDescription)")
+        DispatchQueue.main.async {
+            store.requestAuthorization(toShare: writeTypes, read: nil) { success, error in
+                if let error = error {
+                    print("[TerraReact] HealthKit write authorization error: \(error.localizedDescription)")
+                }
+                completion(success)
             }
-            completion(success)
         }
     }
 
@@ -319,9 +349,10 @@ class TerraReact: NSObject {
     @objc
     func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
-            // Build HK type sets for a single combined authorization dialog
+            // Build HK write types from customWritePermissions
             let writeHKTypes: Set<HKSampleType> = Set(customWritePermissions.compactMap { hkSampleType(for: $0) })
-            let readHKTypes: Set<HKObjectType> = Set(customPermissions.compactMap { hkSampleType(for: $0) as HKObjectType? })
+            // Build HK read types from customPermissions (the read list)
+            let readHKTypes: Set<HKObjectType> = Set(customPermissions.compactMap { hkReadType(for: $0) })
 
             let doInitConnection = {
                 self.terra?.initConnection(type: connection, token: token, customReadTypes: self.customPermissionsSet(customPermissions: customPermissions), schedulerOn: schedulerOn, completion: {success, error in
@@ -334,14 +365,21 @@ class TerraReact: NSObject {
                 )
             }
 
-            // Request BOTH read + write in one combined HealthKit dialog
-            // so the user sees a single sheet with "Allow to read" AND "Allow to write".
-            // Then Terra's initConnection will find permissions already granted.
-            if !writeHKTypes.isEmpty || !readHKTypes.isEmpty, HKHealthStore.isHealthDataAvailable() {
+            // Do a SINGLE combined requestAuthorization for both reads AND writes
+            // BEFORE Terra's initConnection. This ensures the HealthKit dialog
+            // shows BOTH "Allow to read" and "Allow to write" sections in one sheet.
+            // When Terra's initConnection calls its own requestAuthorization
+            // internally, iOS will skip the dialog since all types were already requested.
+            if HKHealthStore.isHealthDataAvailable(), (!writeHKTypes.isEmpty || !readHKTypes.isEmpty) {
                 let store = HKHealthStore()
-                store.requestAuthorization(toShare: writeHKTypes, read: readHKTypes) { _, _ in
-                    DispatchQueue.main.async {
-                        doInitConnection()
+                DispatchQueue.main.async {
+                    store.requestAuthorization(toShare: writeHKTypes, read: readHKTypes) { _, error in
+                        if let error = error {
+                            print("[TerraReact] HealthKit combined authorization error: \(error.localizedDescription)")
+                        }
+                        DispatchQueue.main.async {
+                            doInitConnection()
+                        }
                     }
                 }
             } else {
@@ -795,23 +833,29 @@ class TerraReact: NSObject {
             return
         }
 
-        let store = HKHealthStore()
-        var writeDict: [String: String] = [:]
+        DispatchQueue.main.async {
+            let store = HKHealthStore()
+            var writeDict: [String: String] = [:]
 
-        for key in Self.allWritePermissionKeys {
-            if let sampleType = hkSampleType(for: key) {
-                let status = store.authorizationStatus(for: sampleType)
-                writeDict[key] = authStatusString(status)
-            } else {
-                writeDict[key] = "unsupported"
+            for key in Self.allWritePermissionKeys {
+                if let sampleType = self.hkSampleType(for: key) {
+                    let status = store.authorizationStatus(for: sampleType)
+                    writeDict[key] = self.authStatusString(status)
+                } else {
+                    writeDict[key] = "unsupported"
+                }
             }
-        }
 
-        resolve(["success": true, "write": writeDict])
+            resolve(["success": true, "write": writeDict])
+        }
     }
 
     @objc
     func requestAllHealthKitPermissions(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            resolve(["success": false, "error": "HealthKit not available"])
+            return
+        }
         requestHealthKitWritePermissions(Self.allWritePermissionKeys) { success in
             resolve(["success": success])
         }
