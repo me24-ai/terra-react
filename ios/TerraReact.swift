@@ -755,4 +755,54 @@ class TerraReact: NSObject {
         Terra.setIgnoredSources(ignoredSources)
         resolve(["success": true])
     }
+
+    // MARK: - HealthKit permission introspection
+
+    /// All write types the app may request.
+    private static let allWritePermissionKeys: [String] = [
+        "NUTRITION_CALORIES", "NUTRITION_PROTEIN", "NUTRITION_CARBOHYDRATES",
+        "NUTRITION_FAT_TOTAL", "NUTRITION_FIBRE", "NUTRITION_SUGAR",
+        "NUTRITION_SODIUM", "NUTRITION_CHOLESTEROL", "NUTRITION_WATER",
+        "NUTRITION_VITAMIN_A", "NUTRITION_VITAMIN_C",
+        "WEIGHT", "HEIGHT", "BODY_FAT", "BMI",
+        "WORKOUT_TYPES", "CALORIES", "ACTIVE_DURATIONS", "EXERCISE_DISTANCE", "HEART_RATE",
+    ]
+
+    private func authStatusString(_ status: HKAuthorizationStatus) -> String {
+        switch status {
+        case .notDetermined: return "not_determined"
+        case .sharingDenied:  return "denied"
+        case .sharingAuthorized: return "authorized"
+        @unknown default: return "unknown"
+        }
+    }
+
+    @objc
+    func getAllHealthKitPermissions(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            resolve(["success": false, "error": "HealthKit not available"])
+            return
+        }
+
+        let store = HKHealthStore()
+        var writeDict: [String: String] = [:]
+
+        for key in Self.allWritePermissionKeys {
+            if let sampleType = hkSampleType(for: key) {
+                let status = store.authorizationStatus(for: sampleType)
+                writeDict[key] = authStatusString(status)
+            } else {
+                writeDict[key] = "unsupported"
+            }
+        }
+
+        resolve(["success": true, "write": writeDict])
+    }
+
+    @objc
+    func requestAllHealthKitPermissions(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        requestHealthKitWritePermissions(Self.allWritePermissionKeys) { success in
+            resolve(["success": success])
+        }
+    }
 }

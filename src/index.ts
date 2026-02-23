@@ -544,6 +544,36 @@ export function setIgnoredSources(ignoredSources: Array<String>): void {
   TerraReact.setIgnoredSources(ignoredSources).then();
 }
 
+export type HealthKitPermissionStatus = 'authorized' | 'denied' | 'not_determined' | 'unsupported' | 'unknown';
+
+export type HealthKitPermissionsResult = {
+  success: boolean;
+  error?: string;
+  write?: Record<string, HealthKitPermissionStatus>;
+};
+
+/**
+ * iOS only – returns the current HealthKit **write** authorization status
+ * for every type the app may write.
+ */
+export function getAllHealthKitPermissions(): Promise<HealthKitPermissionsResult> {
+  if (Platform.OS !== 'ios') {
+    return Promise.resolve({ success: false, error: 'Only available on iOS' });
+  }
+  return TerraReact.getAllHealthKitPermissions();
+}
+
+/**
+ * iOS only – requests HealthKit **write** authorization for every type the
+ * app may write. Returns `{ success: true }` if the system dialog was shown.
+ */
+export function requestAllHealthKitPermissions(): Promise<SuccessMessage> {
+  if (Platform.OS !== 'ios') {
+    return Promise.resolve({ success: false, error: 'Only available on iOS' });
+  }
+  return TerraReact.requestAllHealthKitPermissions();
+}
+
 export type Activity = TerraActivityPayload;
 export type Body = TerraBodyPayload;
 export { Connections } from './enums/Connections';
