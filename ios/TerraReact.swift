@@ -191,6 +191,18 @@ class TerraReact: NSObject {
 
     // MARK: - HealthKit write permission mapping
 
+    /// Types that Apple marks as NOT available for sharing (writing).
+    /// Requesting write auth for any of these causes an NSInvalidArgumentException crash.
+    private static let readOnlyPermissions: Set<String> = [
+        "ACTIVE_DURATIONS",       // appleExerciseTime
+        "VO2MAX",                 // vo2Max
+        "HEART_RATE_VARIABILITY", // heartRateVariabilitySDNN
+        "RESTING_HEART_RATE",     // restingHeartRate
+        "INTERBEAT",              // heartRateVariabilitySDNN (alias)
+        "SPEED",                  // runningSpeed
+        "POWER",                  // runningPower
+    ]
+
     private func hkSampleType(for permission: String) -> HKSampleType? {
         switch permission {
         case "WEIGHT":
@@ -308,10 +320,13 @@ class TerraReact: NSObject {
             return
         }
 
+        // Filter out read-only types that would crash
+        let safePermissions = permissions.filter { !Self.readOnlyPermissions.contains($0) }
+
         let store = HKHealthStore()
         var writeTypes = Set<HKSampleType>()
 
-        for permission in permissions {
+        for permission in safePermissions {
             if let sampleType = hkSampleType(for: permission) {
                 writeTypes.insert(sampleType)
             }
@@ -349,8 +364,16 @@ class TerraReact: NSObject {
     @objc
     func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
+            // Filter out read-only types that would crash if requested for write
+            let safeWritePermissions = customWritePermissions.filter { perm in
+                if Self.readOnlyPermissions.contains(perm) {
+                    print("[TerraReact] Skipping read-only type from write permissions: \(perm)")
+                    return false
+                }
+                return true
+            }
             // Build HK write types from customWritePermissions
-            let writeHKTypes: Set<HKSampleType> = Set(customWritePermissions.compactMap { hkSampleType(for: $0) })
+            let writeHKTypes: Set<HKSampleType> = Set(safeWritePermissions.compactMap { hkSampleType(for: $0) })
             // Build HK read types from customPermissions (the read list)
             let readHKTypes: Set<HKObjectType> = Set(customPermissions.compactMap { hkReadType(for: $0) })
 
@@ -814,7 +837,8 @@ class TerraReact: NSObject {
         "NUTRITION_SODIUM", "NUTRITION_CHOLESTEROL", "NUTRITION_WATER",
         "NUTRITION_VITAMIN_A", "NUTRITION_VITAMIN_C",
         "WEIGHT", "HEIGHT", "BODY_FAT", "BMI",
-        "WORKOUT_TYPES", "CALORIES", "ACTIVE_DURATIONS", "EXERCISE_DISTANCE", "HEART_RATE",
+        // NOTE: ACTIVE_DURATIONS (appleExerciseTime) is read-only – do NOT request write.
+        "WORKOUT_TYPES", "CALORIES", "EXERCISE_DISTANCE", "HEART_RATE",
     ]
 
     private func authStatusString(_ status: HKAuthorizationStatus) -> String {
