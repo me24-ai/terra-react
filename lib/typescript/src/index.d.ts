@@ -50,16 +50,17 @@ export type HealthKitPermissionStatus = 'authorized' | 'denied' | 'not_determine
 export type HealthKitPermissionsResult = {
     success: boolean;
     error?: string;
+    read?: Record<string, HealthKitPermissionStatus>;
     write?: Record<string, HealthKitPermissionStatus>;
 };
 /**
- * iOS only – returns the current HealthKit **write** authorization status
- * for every type the app may write.
+ * iOS only – returns the current HealthKit authorization status
+ * for every read and write type the app may use.
  */
 export declare function getAllHealthKitPermissions(): Promise<HealthKitPermissionsResult>;
 /**
- * iOS only – requests HealthKit **write** authorization for every type the
- * app may write. Returns `{ success: true }` if the system dialog was shown.
+ * iOS only – requests HealthKit authorization for every read and write type
+ * the app may use. Returns `{ success: true }` if the system dialog was shown.
  */
 export declare function requestAllHealthKitPermissions(): Promise<SuccessMessage>;
 export type Activity = TerraActivityPayload;

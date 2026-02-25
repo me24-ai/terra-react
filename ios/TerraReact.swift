@@ -288,29 +288,131 @@ class TerraReact: NSObject {
         }
     }
 
-    /// Maps a permission string to an HKObjectType for **read** authorization.
-    /// Covers characteristic types and other non-sample types that `hkSampleType` cannot handle.
-    private func hkReadType(for permission: String) -> HKObjectType? {
-        // First try the sample-type mapper (covers the majority)
-        if let sampleType = hkSampleType(for: permission) {
-            return sampleType as HKObjectType
-        }
-        // Handle non-sample types used for reads only
+    /// Maps a permission string to one or more HKObjectTypes for **read** authorization.
+    /// Some keys (e.g. BLOOD_PRESSURE) expand to multiple underlying types.
+    private func hkReadTypes(for permission: String) -> [HKObjectType] {
+        // Handle types that need special treatment for reads
         switch permission {
+        // Blood pressure is a correlation — can't be requested directly for read.
+        // Request the two underlying quantity types instead.
+        case "BLOOD_PRESSURE":
+            return [
+                HKQuantityType.quantityType(forIdentifier: .bloodPressureSystolic),
+                HKQuantityType.quantityType(forIdentifier: .bloodPressureDiastolic),
+            ].compactMap { $0 }
+        // Non-sample types that hkSampleType can't handle
         case "GENDER":
-            return HKCharacteristicType.characteristicType(forIdentifier: .biologicalSex)
+            return [HKCharacteristicType.characteristicType(forIdentifier: .biologicalSex)].compactMap { $0 }
         case "DATE_OF_BIRTH":
-            return HKCharacteristicType.characteristicType(forIdentifier: .dateOfBirth)
+            return [HKCharacteristicType.characteristicType(forIdentifier: .dateOfBirth)].compactMap { $0 }
         case "ACTIVITY_SUMMARY":
-            return HKActivitySummaryType.activitySummaryType()
+            return [HKActivitySummaryType.activitySummaryType()]
         case "MENSTRUATION":
-            return HKCategoryType.categoryType(forIdentifier: .menstrualFlow)
+            return [HKCategoryType.categoryType(forIdentifier: .menstrualFlow)].compactMap { $0 }
         case "INTERBEAT":
-            return HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)
+            return [HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)].compactMap { $0 }
         case "SWIMMING_SUMMARY":
-            return HKQuantityType.quantityType(forIdentifier: .swimmingStrokeCount)
+            return [HKQuantityType.quantityType(forIdentifier: .swimmingStrokeCount)].compactMap { $0 }
+        // Extra activity / fitness types
+        case "DISTANCE_CYCLING":
+            return [HKQuantityType.quantityType(forIdentifier: .distanceCycling)].compactMap { $0 }
+        case "DISTANCE_SWIMMING":
+            return [HKQuantityType.quantityType(forIdentifier: .distanceSwimming)].compactMap { $0 }
+        case "DISTANCE_WHEELCHAIR":
+            return [HKQuantityType.quantityType(forIdentifier: .distanceWheelchair)].compactMap { $0 }
+        case "STAND_TIME":
+            return [HKQuantityType.quantityType(forIdentifier: .appleStandTime)].compactMap { $0 }
+        case "HEARTBEAT_SERIES":
+            return [HKSeriesType.heartbeat()]
+        case "WALKING_SPEED":
+            if #available(iOS 14.0, *) {
+                return [HKQuantityType.quantityType(forIdentifier: .walkingSpeed)].compactMap { $0 }
+            }
+            return []
+        // Dietary micronutrients
+        case "NUTRITION_BIOTIN":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryBiotin)].compactMap { $0 }
+        case "NUTRITION_CAFFEINE":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryCaffeine)].compactMap { $0 }
+        case "NUTRITION_CALCIUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryCalcium)].compactMap { $0 }
+        case "NUTRITION_CHLORIDE":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryChloride)].compactMap { $0 }
+        case "NUTRITION_CHROMIUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryChromium)].compactMap { $0 }
+        case "NUTRITION_COPPER":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryCopper)].compactMap { $0 }
+        case "NUTRITION_FAT_MONOUNSATURATED":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryFatMonounsaturated)].compactMap { $0 }
+        case "NUTRITION_FAT_POLYUNSATURATED":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryFatPolyunsaturated)].compactMap { $0 }
+        case "NUTRITION_FAT_SATURATED":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryFatSaturated)].compactMap { $0 }
+        case "NUTRITION_FOLATE":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryFolate)].compactMap { $0 }
+        case "NUTRITION_IODINE":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryIodine)].compactMap { $0 }
+        case "NUTRITION_IRON":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryIron)].compactMap { $0 }
+        case "NUTRITION_MAGNESIUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryMagnesium)].compactMap { $0 }
+        case "NUTRITION_MANGANESE":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryManganese)].compactMap { $0 }
+        case "NUTRITION_MOLYBDENUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryMolybdenum)].compactMap { $0 }
+        case "NUTRITION_NIACIN":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryNiacin)].compactMap { $0 }
+        case "NUTRITION_PANTOTHENIC_ACID":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryPantothenicAcid)].compactMap { $0 }
+        case "NUTRITION_PHOSPHORUS":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryPhosphorus)].compactMap { $0 }
+        case "NUTRITION_POTASSIUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryPotassium)].compactMap { $0 }
+        case "NUTRITION_RIBOFLAVIN":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryRiboflavin)].compactMap { $0 }
+        case "NUTRITION_SELENIUM":
+            return [HKQuantityType.quantityType(forIdentifier: .dietarySelenium)].compactMap { $0 }
+        case "NUTRITION_THIAMIN":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryThiamin)].compactMap { $0 }
+        case "NUTRITION_VITAMIN_B12":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryVitaminB12)].compactMap { $0 }
+        case "NUTRITION_VITAMIN_B6":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryVitaminB6)].compactMap { $0 }
+        case "NUTRITION_VITAMIN_D":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryVitaminD)].compactMap { $0 }
+        case "NUTRITION_VITAMIN_E":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryVitaminE)].compactMap { $0 }
+        case "NUTRITION_VITAMIN_K":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryVitaminK)].compactMap { $0 }
+        case "NUTRITION_ZINC":
+            return [HKQuantityType.quantityType(forIdentifier: .dietaryZinc)].compactMap { $0 }
+        // iOS 17+ cycling & wrist temp
+        case "CYCLING_CADENCE":
+            if #available(iOS 17.0, *) {
+                return [HKQuantityType.quantityType(forIdentifier: .cyclingCadence)].compactMap { $0 }
+            }
+            return []
+        case "CYCLING_POWER":
+            if #available(iOS 17.0, *) {
+                return [HKQuantityType.quantityType(forIdentifier: .cyclingPower)].compactMap { $0 }
+            }
+            return []
+        case "CYCLING_SPEED":
+            if #available(iOS 17.0, *) {
+                return [HKQuantityType.quantityType(forIdentifier: .cyclingSpeed)].compactMap { $0 }
+            }
+            return []
+        case "WRIST_TEMPERATURE":
+            if #available(iOS 17.0, *) {
+                return [HKQuantityType.quantityType(forIdentifier: .appleSleepingWristTemperature)].compactMap { $0 }
+            }
+            return []
         default:
-            return nil
+            // Fall through to the sample-type mapper for everything else
+            if let sampleType = hkSampleType(for: permission) {
+                return [sampleType as HKObjectType]
+            }
+            return []
         }
     }
 
@@ -364,21 +466,26 @@ class TerraReact: NSObject {
     @objc
     func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
-            // Filter out read-only types that would crash if requested for write
-            let safeWritePermissions = customWritePermissions.filter { perm in
-                if Self.readOnlyPermissions.contains(perm) {
-                    print("[TerraReact] Skipping read-only type from write permissions: \(perm)")
-                    return false
-                }
-                return true
+            // Build ALL write types from the hardcoded list (not from JS args).
+            // The native SDK has no concept of write permissions — we handle it ourselves.
+            let safeWriteKeys = Self.allWritePermissionKeys.filter { !Self.readOnlyPermissions.contains($0) }
+            let writeHKTypes: Set<HKSampleType> = Set(safeWriteKeys.compactMap { hkSampleType(for: $0) })
+
+            // Build ALL read types from the hardcoded list.
+            // allReadPermissionKeys now includes all extra types (micronutrients,
+            // cycling, swimming, etc.) so hkReadTypes covers everything.
+            var readHKTypes = Set<HKObjectType>()
+            for key in Self.allReadPermissionKeys {
+                readHKTypes.formUnion(hkReadTypes(for: key))
             }
-            // Build HK write types from customWritePermissions
-            let writeHKTypes: Set<HKSampleType> = Set(safeWritePermissions.compactMap { hkSampleType(for: $0) })
-            // Build HK read types from customPermissions (the read list)
-            let readHKTypes: Set<HKObjectType> = Set(customPermissions.compactMap { hkReadType(for: $0) })
+
+            // Build the Terra-native CustomPermissions set from allReadPermissionKeys
+            // so Terra uses our exact set instead of its defaults (which would
+            // trigger a second HealthKit dialog).
+            let terraReadPerms = self.customPermissionsSet(customPermissions: Self.allReadPermissionKeys)
 
             let doInitConnection = {
-                self.terra?.initConnection(type: connection, token: token, customReadTypes: self.customPermissionsSet(customPermissions: customPermissions), schedulerOn: schedulerOn, completion: {success, error in
+                self.terra?.initConnection(type: connection, token: token, customReadTypes: terraReadPerms, schedulerOn: schedulerOn, completion: {success, error in
                         if let error = error{
                             resolve(["success": success, "error": self.errorMessage(error)])
                             return
@@ -391,9 +498,7 @@ class TerraReact: NSObject {
             // Do a SINGLE combined requestAuthorization for both reads AND writes
             // BEFORE Terra's initConnection. This ensures the HealthKit dialog
             // shows BOTH "Allow to read" and "Allow to write" sections in one sheet.
-            // When Terra's initConnection calls its own requestAuthorization
-            // internally, iOS will skip the dialog since all types were already requested.
-            if HKHealthStore.isHealthDataAvailable(), (!writeHKTypes.isEmpty || !readHKTypes.isEmpty) {
+            if HKHealthStore.isHealthDataAvailable() {
                 let store = HKHealthStore()
                 DispatchQueue.main.async {
                     store.requestAuthorization(toShare: writeHKTypes, read: readHKTypes) { _, error in
@@ -830,6 +935,42 @@ class TerraReact: NSObject {
 
     // MARK: - HealthKit permission introspection
 
+    /// All read types the app may request.
+    private static let allReadPermissionKeys: [String] = [
+        "WORKOUT_TYPES", "ACTIVITY_SUMMARY", "CALORIES", "STEPS",
+        "HEART_RATE", "HEART_RATE_VARIABILITY", "VO2MAX", "HEIGHT",
+        "ACTIVE_DURATIONS", "WEIGHT", "FLIGHTS_CLIMBED", "BMI",
+        "BODY_FAT", "EXERCISE_DISTANCE", "GENDER", "DATE_OF_BIRTH",
+        "BASAL_ENERGY_BURNED", "SWIMMING_SUMMARY", "RESTING_HEART_RATE",
+        "BLOOD_PRESSURE", "BLOOD_GLUCOSE", "BODY_TEMPERATURE",
+        "MINDFULNESS", "LEAN_BODY_MASS", "OXYGEN_SATURATION",
+        "SLEEP_ANALYSIS", "RESPIRATORY_RATE",
+        "NUTRITION_SODIUM", "NUTRITION_PROTEIN", "NUTRITION_CARBOHYDRATES",
+        "NUTRITION_FIBRE", "NUTRITION_FAT_TOTAL", "NUTRITION_SUGAR",
+        "NUTRITION_VITAMIN_C", "NUTRITION_VITAMIN_A", "NUTRITION_CALORIES",
+        "NUTRITION_WATER", "NUTRITION_CHOLESTEROL",
+        "MENSTRUATION", "INTERBEAT", "SPEED", "POWER",
+        // Extra types Terra SDK reads internally
+        "DISTANCE_CYCLING", "DISTANCE_SWIMMING", "DISTANCE_WHEELCHAIR",
+        "STAND_TIME", "HEARTBEAT_SERIES", "WALKING_SPEED",
+        // Dietary micronutrients
+        "NUTRITION_BIOTIN", "NUTRITION_CAFFEINE", "NUTRITION_CALCIUM",
+        "NUTRITION_CHLORIDE", "NUTRITION_CHROMIUM", "NUTRITION_COPPER",
+        "NUTRITION_FAT_MONOUNSATURATED", "NUTRITION_FAT_POLYUNSATURATED",
+        "NUTRITION_FAT_SATURATED", "NUTRITION_FOLATE", "NUTRITION_IODINE",
+        "NUTRITION_IRON", "NUTRITION_MAGNESIUM", "NUTRITION_MANGANESE",
+        "NUTRITION_MOLYBDENUM", "NUTRITION_NIACIN",
+        "NUTRITION_PANTOTHENIC_ACID", "NUTRITION_PHOSPHORUS",
+        "NUTRITION_POTASSIUM", "NUTRITION_RIBOFLAVIN",
+        "NUTRITION_SELENIUM", "NUTRITION_THIAMIN",
+        "NUTRITION_VITAMIN_B12", "NUTRITION_VITAMIN_B6",
+        "NUTRITION_VITAMIN_D", "NUTRITION_VITAMIN_E",
+        "NUTRITION_VITAMIN_K", "NUTRITION_ZINC",
+        // iOS 17+ types
+        "CYCLING_CADENCE", "CYCLING_POWER", "CYCLING_SPEED",
+        "WRIST_TEMPERATURE",
+    ]
+
     /// All write types the app may request.
     private static let allWritePermissionKeys: [String] = [
         "NUTRITION_CALORIES", "NUTRITION_PROTEIN", "NUTRITION_CARBOHYDRATES",
@@ -859,8 +1000,9 @@ class TerraReact: NSObject {
 
         DispatchQueue.main.async {
             let store = HKHealthStore()
-            var writeDict: [String: String] = [:]
 
+            // Write statuses (authorizationStatus works reliably for write)
+            var writeDict: [String: String] = [:]
             for key in Self.allWritePermissionKeys {
                 if let sampleType = self.hkSampleType(for: key) {
                     let status = store.authorizationStatus(for: sampleType)
@@ -870,7 +1012,38 @@ class TerraReact: NSObject {
                 }
             }
 
-            resolve(["success": true, "write": writeDict])
+            // Read statuses – Apple does not expose per-type read authorization.
+            // We use getRequestStatusForAuthorization to check whether the read
+            // types have been requested at all. If they have, we mark them as
+            // "requested" (the best we can do); otherwise "not_determined".
+            var readTypes = Set<HKObjectType>()
+            for key in Self.allReadPermissionKeys {
+                readTypes.formUnion(self.hkReadTypes(for: key))
+            }
+
+            store.getRequestStatusForAuthorization(toShare: Set<HKSampleType>(), read: readTypes) { status, _ in
+                // status tells us whether there are types that still need requesting
+                let globalReadStatus: String
+                switch status {
+                case .unnecessary:
+                    globalReadStatus = "authorized"   // all requested
+                case .shouldRequest:
+                    globalReadStatus = "not_determined" // not yet asked
+                default:
+                    globalReadStatus = "unknown"
+                }
+
+                var readDict: [String: String] = [:]
+                for key in Self.allReadPermissionKeys {
+                    if !self.hkReadTypes(for: key).isEmpty {
+                        readDict[key] = globalReadStatus
+                    } else {
+                        readDict[key] = "unsupported"
+                    }
+                }
+
+                resolve(["success": true, "write": writeDict, "read": readDict])
+            }
         }
     }
 
@@ -880,8 +1053,31 @@ class TerraReact: NSObject {
             resolve(["success": false, "error": "HealthKit not available"])
             return
         }
-        requestHealthKitWritePermissions(Self.allWritePermissionKeys) { success in
-            resolve(["success": success])
+
+        let store = HKHealthStore()
+
+        // Build ALL read types
+        var readTypes = Set<HKObjectType>()
+        for key in Self.allReadPermissionKeys {
+            readTypes.formUnion(hkReadTypes(for: key))
+        }
+
+        // Build ALL write types (safe only)
+        let safeWriteKeys = Self.allWritePermissionKeys.filter { !Self.readOnlyPermissions.contains($0) }
+        var writeTypes = Set<HKSampleType>()
+        for key in safeWriteKeys {
+            if let sampleType = hkSampleType(for: key) {
+                writeTypes.insert(sampleType)
+            }
+        }
+
+        DispatchQueue.main.async {
+            store.requestAuthorization(toShare: writeTypes, read: readTypes) { success, error in
+                if let error = error {
+                    print("[TerraReact] HealthKit combined authorization error: \(error.localizedDescription)")
+                }
+                resolve(["success": success])
+            }
         }
     }
 }
