@@ -10,9 +10,11 @@ private func toBodyDouble(_ value: Any?) -> Double? {
 }
 
 func convertToTerraBodyPayload(_ data: NSDictionary) -> TerraBodyData? {
-    // Build a MeasurementDataSample from the flat JS payload.
+    let startTime = data["start_time"] as? String
+    let endTime   = data["end_time"]   as? String
+
     let sample = MeasurementDataSample(
-        measurement_time: data["timestamp"] as? String,
+        measurement_time: startTime,
         bodyfat_percentage: toBodyDouble(data["bodyfat_percentage"]),
         BMI: toBodyDouble(data["BMI"]),
         muscle_mass_g: toBodyDouble(data["muscle_mass_g"]),
@@ -32,14 +34,27 @@ func convertToTerraBodyPayload(_ data: NSDictionary) -> TerraBodyData? {
 
     let measurements = TerraMeasurementData(measurements: [sample])
 
-    let timestamp = data["timestamp"] as? String
     let meta = TerraBodyMetaData(
-        start_time: timestamp,
-        end_time: timestamp
+        start_time: startTime,
+        end_time: endTime
     )
+
+    let deviceData: TerraDeviceData?
+    if let dd = data["device_data"] as? NSDictionary {
+        deviceData = TerraDeviceData(
+            software_version: dd["software_version"] as? String,
+            manufacturer: dd["manufacturer"] as? String,
+            serial_number: dd["serial_number"] as? String,
+            name: dd["name"] as? String,
+            hardware_version: dd["hardware_version"] as? String
+        )
+    } else {
+        deviceData = nil
+    }
 
     return TerraBodyData(
         metadata: meta,
-        measurements_data: measurements
+        measurements_data: measurements,
+        device_data: deviceData
     )
 }

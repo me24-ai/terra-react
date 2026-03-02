@@ -13,18 +13,21 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
     let metadataDict = data["metadata"] as? NSDictionary
     let summaryDict = data["summary"] as? NSDictionary
 
+    let startTime = metadataDict?["start_time"] as? String
+    let endTime   = metadataDict?["end_time"]   as? String
+
     var meals: [TerraMealData] = []
-    if let me24Id = metadataDict?["me24_id"] as? String {
-        if !me24Id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            var meal = TerraMealData()
-            meal.id = me24Id
-            meals.append(meal)
-        }
+    if let me24Id = metadataDict?["me24_id"] as? String,
+       !me24Id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        var meal = TerraMealData()
+        meal.id = me24Id
+        meal.timestamp = startTime  // required — SDK rejects meals with nil timestamp
+        meals.append(meal)
     }
 
     let meta = TerraNutritonMetaData(
-        start_time: metadataDict?["start_time"] as? String,
-        end_time: metadataDict?["end_time"] as? String
+        start_time: startTime,
+        end_time: endTime
     )
 
     let macrosDict = (summaryDict?["macros"] as? NSDictionary)
