@@ -711,8 +711,13 @@ class TerraReact: NSObject {
             return
         }
 
+        guard let terra = terra else {
+            resolve(["success": false, "error": "Terra SDK not initialised"])
+            return
+        }
+
         if #available(iOS 14, *) {
-            terra?.postActivity(type: connection, payload: activityPayload){
+            terra.postActivity(type: connection, payload: activityPayload){
                 (success, err) in
                 if let err = err {
                     resolve(["success": false, "error": self.errorMessage(err)])
@@ -738,7 +743,12 @@ class TerraReact: NSObject {
             return
         }
 
-        terra?.postNutrition(type: connection, payload: nutritionPayload) { success in
+        guard let terra = terra else {
+            resolve(["success": false, "error": "Terra SDK not initialised"])
+            return
+        }
+
+        terra.postNutrition(type: connection, payload: nutritionPayload) { success in
             resolve(["success": success, "error": NSNull()])
         }
     }
@@ -755,7 +765,12 @@ class TerraReact: NSObject {
             return
         }
 
-        terra?.postBody(type: connection, payload: bodyPayload) { success in
+        guard let terra = terra else {
+            resolve(["success": false, "error": "Terra SDK not initialised"])
+            return
+        }
+
+        terra.postBody(type: connection, payload: bodyPayload) { success in
             resolve(["success": success, "error": NSNull()])
         }
     }

@@ -363,11 +363,13 @@ export function getAthlete(
 /*
 @Only availble on iOS
 */
+const POST_TIMEOUT_MS = 5000;
+
 export function postActivity(
   connection: Connections_,
   payload: TerraActivityPayload
 ): Promise<SuccessMessage> {
-  return new Promise<SuccessMessage>((resolve, reject) => {
+  const native = new Promise<SuccessMessage>((resolve, reject) => {
     TerraReact.postActivity(ConnectionToString(connection), payload)
       .then((d: any) => {
         resolve({ success: d.success, error: d.error } as SuccessMessage);
@@ -376,6 +378,10 @@ export function postActivity(
         reject(e);
       });
   });
+  const timeout = new Promise<SuccessMessage>((resolve) =>
+    setTimeout(() => resolve({ success: false, error: 'postActivity timed out' }), POST_TIMEOUT_MS)
+  );
+  return Promise.race([native, timeout]);
 }
 
 /*
@@ -391,7 +397,7 @@ export function postNutrition(
       error: 'postNutrition is only available on iOS',
     });
   }
-  return new Promise<SuccessMessage>((resolve, reject) => {
+  const native = new Promise<SuccessMessage>((resolve, reject) => {
     TerraReact.postNutrition(ConnectionToString(connection), payload)
       .then((d: any) => {
         resolve({ success: d.success, error: d.error } as SuccessMessage);
@@ -400,6 +406,10 @@ export function postNutrition(
         reject(e);
       });
   });
+  const timeout = new Promise<SuccessMessage>((resolve) =>
+    setTimeout(() => resolve({ success: false, error: 'postNutrition timed out' }), POST_TIMEOUT_MS)
+  );
+  return Promise.race([native, timeout]);
 }
 
 /*
@@ -416,7 +426,7 @@ export function postBody(
     });
   }
 
-  return new Promise<SuccessMessage>((resolve, reject) => {
+  const native = new Promise<SuccessMessage>((resolve, reject) => {
     TerraReact.postBody(ConnectionToString(connection), payload)
       .then((d: any) => {
         resolve({ success: d.success, error: d.error } as SuccessMessage);
@@ -425,6 +435,10 @@ export function postBody(
         reject(e);
       });
   });
+  const timeout = new Promise<SuccessMessage>((resolve) =>
+    setTimeout(() => resolve({ success: false, error: 'postBody timed out' }), POST_TIMEOUT_MS)
+  );
+  return Promise.race([native, timeout]);
 }
 export function getPlannedWorkouts<T = any>(
   connection: Connections_
