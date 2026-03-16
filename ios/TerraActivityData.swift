@@ -31,7 +31,7 @@ func convertToTerraActivityPayload(_ data: NSDictionary) -> TerraActivityData? {
             type: metadata["type"] as? Int,
             end_time: metadata["end_time"] as? String,
             start_time: metadata["start_time"] as? String,
-            summary_id: metadata["me24_id"] as? String,
+            summary_id: nil,
             upload_type: metadata["upload_type"] as? Int
         ),
         device_data: .init(
