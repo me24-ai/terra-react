@@ -167,7 +167,6 @@ export function initConnection(
   customPermissions_: CustomPermissions_[] = [],
   startIntent: string | null = null,
   customWritePermissions_: CustomPermissions_[] = [],
-  skipHealthKitAuth: boolean = false
 ): Promise<SuccessMessage> {
   return TerraReact.initConnection(
     ConnectionToString(connection),
@@ -176,7 +175,6 @@ export function initConnection(
     customPermissions_.map((p) => CustomPermissions_ToString(p)),
     startIntent,
     customWritePermissions_.map((p) => CustomPermissions_ToString(p)),
-    skipHealthKitAuth
   );
 }
 

@@ -22,7 +22,6 @@ RCT_EXTERN_METHOD(
     customPermissions: (NSArray *)customPermissions
     startIntent: (NSString *)startIntent
     customWritePermissions: (NSArray *)customWritePermissions
-    skipHealthKitAuth: (BOOL)skipHealthKitAuth
     resolve: (RCTPromiseResolveBlock)resolve
     rejecter: (RCTPromiseRejectBlock)reject
 )

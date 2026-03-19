@@ -464,41 +464,8 @@ class TerraReact: NSObject {
     }
 
     @objc
-    func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], skipHealthKitAuth: Bool, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
+    func initConnection(_ connection: String, token: String, schedulerOn: Bool, customPermissions: [String], startIntent: String, customWritePermissions: [String], resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock){
         if let connection = connectionParse(connection: connection){
-            // Build the Terra-native CustomPermissions set from allReadPermissionKeys
-            // so Terra uses our exact set instead of its defaults (which would
-            // trigger a second HealthKit dialog).
-            let terraReadPerms = self.customPermissionsSet(customPermissions: Self.allReadPermissionKeys)
-
-            let doInitConnection = {
-                guard let terra = self.terra else {
-                    print("[TerraReact] initConnection: terra instance is nil — initTerra must be called first")
-                    resolve(["success": false, "error": "Terra SDK not initialised. Call initTerra first."])
-                    return
-                }
-                terra.initConnection(type: connection, token: token, customReadTypes: terraReadPerms, schedulerOn: schedulerOn, completion: {success, error in
-                        if let error = error{
-                            resolve(["success": success, "error": self.errorMessage(error)])
-                            return
-                        }
-                        resolve(["success": success])
-                    }
-                )
-            }
-
-            // When skipHealthKitAuth is true (permissions already granted in a
-            // previous session), go straight to Terra's initConnection without
-            // calling requestAuthorization — which can hang on some iOS versions
-            // when the permission sheet is not presented.
-            if skipHealthKitAuth {
-                print("[TerraReact] Skipping HealthKit requestAuthorization (already granted)")
-                DispatchQueue.main.async {
-                    doInitConnection()
-                }
-                return
-            }
-
             // Build ALL write types from the hardcoded list (not from JS args).
             // The native SDK has no concept of write permissions — we handle it ourselves.
             let safeWriteKeys = Self.allWritePermissionKeys.filter { !Self.readOnlyPermissions.contains($0) }
@@ -512,6 +479,11 @@ class TerraReact: NSObject {
                 readHKTypes.formUnion(hkReadTypes(for: key))
             }
 
+            // Build the Terra-native CustomPermissions set from allReadPermissionKeys
+            // so Terra uses our exact set instead of its defaults (which would
+            // trigger a second HealthKit dialog).
+            let terraReadPerms = self.customPermissionsSet(customPermissions: Self.allReadPermissionKeys)
+
             // Do a SINGLE combined requestAuthorization for both reads AND writes
             // BEFORE Terra's initConnection. This ensures the HealthKit dialog
             // shows BOTH "Allow to read" and "Allow to write" sections in one sheet.
@@ -522,13 +494,23 @@ class TerraReact: NSObject {
                         if let error = error {
                             print("[TerraReact] HealthKit combined authorization error: \(error.localizedDescription)")
                         }
-                        DispatchQueue.main.async {
-                            doInitConnection()
-                        }
+                        self.terra?.initConnection(type: connection, token: token, customReadTypes: terraReadPerms, schedulerOn: schedulerOn, completion: {success, error in
+                            if let error = error{
+                                resolve(["success": success, "error": self.errorMessage(error)])
+                                return
+                            }
+                            resolve(["success": success])
+                        })
                     }
                 }
             } else {
-                doInitConnection()
+                self.terra?.initConnection(type: connection, token: token, customReadTypes: terraReadPerms, schedulerOn: schedulerOn, completion: {success, error in
+                    if let error = error{
+                        resolve(["success": success, "error": self.errorMessage(error)])
+                        return
+                    }
+                    resolve(["success": success])
+                })
             }
         }
         else {
