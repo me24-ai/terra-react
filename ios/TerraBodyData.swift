@@ -39,22 +39,9 @@ func convertToTerraBodyPayload(_ data: NSDictionary) -> TerraBodyData? {
         end_time: endTime
     )
 
-    let deviceData: TerraDeviceData?
-    if let dd = data["device_data"] as? NSDictionary {
-        deviceData = TerraDeviceData(
-            software_version: dd["software_version"] as? String,
-            manufacturer: dd["manufacturer"] as? String,
-            serial_number: dd["serial_number"] as? String,
-            name: dd["name"] as? String,
-            hardware_version: dd["hardware_version"] as? String
-        )
-    } else {
-        deviceData = nil
-    }
-
     return TerraBodyData(
         metadata: meta,
         measurements_data: measurements,
-        device_data: deviceData
+        device_data: .init(name: "ME24")
     )
 }

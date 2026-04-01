@@ -700,6 +700,8 @@ class TerraReact: NSObject {
 
     @objc
     func postActivity(_ connection: String, payload: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        print("[TerraReact] postActivity called with connection=\(connection) payload=\(payload)")
+
         guard let connection = connectionParse(connection: connection) else {
             resolve(["success": false, "data": nil, "error": "Invalid Connection Type"])
             return
@@ -710,28 +712,67 @@ class TerraReact: NSObject {
             return
         }
 
+        if let jsonData = try? JSONEncoder().encode(activityPayload),
+           let jsonStr = String(data: jsonData, encoding: .utf8) {
+            print("[TerraReact] postActivity TerraActivityData JSON: \(jsonStr)")
+        }
+
         guard let terra = terra else {
             resolve(["success": false, "error": "Terra SDK not initialised"])
             return
         }
 
-        if #available(iOS 14, *) {
-            terra.postActivity(type: connection, payload: activityPayload){
-                (success, err) in
-                if let err = err {
-                    resolve(["success": false, "error": self.errorMessage(err)])
+        guard HKHealthStore.isHealthDataAvailable() else {
+            resolve(["success": false, "error": "HealthKit not available"])
+            return
+        }
+
+        let store = HKHealthStore()
+        let activityTypes: Set<HKSampleType> = Set([
+            HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned),
+            HKQuantityType.quantityType(forIdentifier: .basalEnergyBurned),
+            HKQuantityType.quantityType(forIdentifier: .stepCount),
+            HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning),
+            HKQuantityType.quantityType(forIdentifier: .heartRate),
+            HKObjectType.workoutType(),
+        ].compactMap { $0 })
+
+        DispatchQueue.main.async {
+            store.requestAuthorization(toShare: activityTypes, read: nil) { _, authError in
+                if let authError = authError {
+                    print("[TerraReact] postActivity HealthKit auth error: \(authError.localizedDescription)")
                 }
-                else{
-                    resolve(["success": success, "error": nil])
+
+                let workoutStatus = store.authorizationStatus(for: HKObjectType.workoutType())
+                print("[TerraReact] postActivity HealthKit workout write auth: \(workoutStatus.rawValue)")
+
+                if workoutStatus == .sharingDenied {
+                    resolve(["success": false, "error": "HEALTHKIT_WRITE_DENIED"])
+                    return
+                }
+
+                if #available(iOS 14, *) {
+                    print("[TerraReact] postActivity calling terra.postActivity...")
+                    terra.postActivity(type: connection, payload: activityPayload) { (success, err) in
+                        if let err = err {
+                            print("[TerraReact] postActivity SDK error: \(self.errorMessage(err))")
+                            resolve(["success": false, "error": self.errorMessage(err)])
+                        } else {
+                            print("[TerraReact] postActivity SDK returned success=\(success)")
+                            resolve(["success": success, "error": nil])
+                        }
+                    }
+                } else {
+                    resolve(["success": false, "error": "postActivity is only available for iOS 14 and above"])
                 }
             }
-        } else {
-            resolve(["success": false, "error": "postActivity is only available for iOS 14 and above"])
         }
     }
 
     @objc
     func postNutrition(_ connection: String, payload: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) {
+        print("[TerraReact] postNutrition called with connection=\(connection) payload=\(payload)")
+
         guard let connection = connectionParse(connection: connection) else {
             resolve(["success": false, "error": "Invalid Connection Type"])
             return
@@ -742,13 +783,50 @@ class TerraReact: NSObject {
             return
         }
 
+        if let jsonData = try? JSONEncoder().encode(nutritionPayload),
+           let jsonStr = String(data: jsonData, encoding: .utf8) {
+            print("[TerraReact] postNutrition TerraNutritionData JSON: \(jsonStr)")
+        }
+
         guard let terra = terra else {
             resolve(["success": false, "error": "Terra SDK not initialised"])
             return
         }
 
-        terra.postNutrition(type: connection, payload: nutritionPayload) { success in
-            resolve(["success": success, "error": NSNull()])
+        guard HKHealthStore.isHealthDataAvailable() else {
+            resolve(["success": false, "error": "HealthKit not available"])
+            return
+        }
+
+        let store = HKHealthStore()
+        let nutritionTypes: Set<HKSampleType> = Set([
+            HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed),
+            HKQuantityType.quantityType(forIdentifier: .dietaryProtein),
+            HKQuantityType.quantityType(forIdentifier: .dietaryCarbohydrates),
+            HKQuantityType.quantityType(forIdentifier: .dietaryFatTotal),
+        ].compactMap { $0 })
+
+        DispatchQueue.main.async {
+            store.requestAuthorization(toShare: nutritionTypes, read: nil) { _, authError in
+                if let authError = authError {
+                    print("[TerraReact] postNutrition HealthKit auth error: \(authError.localizedDescription)")
+                }
+
+                if let calorieType = HKQuantityType.quantityType(forIdentifier: .dietaryEnergyConsumed) {
+                    let status = store.authorizationStatus(for: calorieType)
+                    print("[TerraReact] postNutrition HealthKit dietaryEnergy write auth: \(status.rawValue)")
+                    if status == .sharingDenied {
+                        resolve(["success": false, "error": "HEALTHKIT_WRITE_DENIED"])
+                        return
+                    }
+                }
+
+                print("[TerraReact] postNutrition calling terra.postNutrition...")
+                terra.postNutrition(type: connection, payload: nutritionPayload) { success in
+                    print("[TerraReact] postNutrition SDK returned success=\(success)")
+                    resolve(["success": success, "error": success ? NSNull() : "HealthKit write failed" as Any])
+                }
+            }
         }
     }
 
@@ -769,8 +847,43 @@ class TerraReact: NSObject {
             return
         }
 
-        terra.postBody(type: connection, payload: bodyPayload) { success in
-            resolve(["success": success, "error": NSNull()])
+        guard HKHealthStore.isHealthDataAvailable() else {
+            resolve(["success": false, "error": "HealthKit not available"])
+            return
+        }
+
+        let store = HKHealthStore()
+        let bodyTypes: Set<HKSampleType> = Set([
+            HKQuantityType.quantityType(forIdentifier: .bodyMass),
+            HKQuantityType.quantityType(forIdentifier: .height),
+            HKQuantityType.quantityType(forIdentifier: .bodyFatPercentage),
+            HKQuantityType.quantityType(forIdentifier: .bodyMassIndex),
+            HKQuantityType.quantityType(forIdentifier: .leanBodyMass),
+        ].compactMap { $0 })
+
+        // Request on main thread — iOS requires main thread to show the permission sheet
+        DispatchQueue.main.async {
+            store.requestAuthorization(toShare: bodyTypes, read: nil) { _, authError in
+                if let authError = authError {
+                    print("[TerraReact] postBody HealthKit auth error: \(authError.localizedDescription)")
+                }
+
+                // After auth request, check status.
+                // Note: iOS returns .sharingDenied for both "never asked" and "user denied".
+                // If requestAuthorization just showed the sheet and user granted, status flips to .sharingAuthorized.
+                // If user denied or sheet wasn't shown (already denied), status stays .sharingDenied.
+                if let bodyMassType = HKQuantityType.quantityType(forIdentifier: .bodyMass) {
+                    let status = store.authorizationStatus(for: bodyMassType)
+                    if status == .sharingDenied {
+                        resolve(["success": false, "error": "HEALTHKIT_WRITE_DENIED"])
+                        return
+                    }
+                }
+
+                terra.postBody(type: connection, payload: bodyPayload) { success in
+                    resolve(["success": success, "error": success ? NSNull() : "HealthKit write failed" as Any])
+                }
+            }
         }
     }
 

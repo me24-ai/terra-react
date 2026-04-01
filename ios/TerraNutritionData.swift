@@ -16,17 +16,6 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
     let startTime = metadataDict?["start_time"] as? String
     let endTime   = metadataDict?["end_time"]   as? String
 
-    // Read GUID from device_data.serial_number (consistent with activity and body)
-    var meals: [TerraMealData] = []
-    if let deviceDataDict = data["device_data"] as? NSDictionary,
-       let serialNumber = deviceDataDict["serial_number"] as? String,
-       !serialNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        var meal = TerraMealData()
-        meal.id = serialNumber
-        meal.timestamp = startTime  // required — SDK rejects meals with nil timestamp
-        meals.append(meal)
-    }
-
     let meta = TerraNutritonMetaData(
         start_time: startTime,
         end_time: endTime
@@ -109,7 +98,7 @@ func convertToTerraNutritionPayload(_ data: NSDictionary) -> TerraNutritionData?
     )
 
     return TerraNutritionData(
-        meals: meals,
+        meals: [],
         summary: summary,
         metadata: meta,
         drink_samples: []

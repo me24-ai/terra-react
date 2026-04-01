@@ -363,7 +363,7 @@ export function getAthlete(
 /*
 @Only availble on iOS
 */
-const POST_TIMEOUT_MS = 5000;
+const POST_TIMEOUT_MS = 60000;
 
 export function postActivity(
   connection: Connections_,
