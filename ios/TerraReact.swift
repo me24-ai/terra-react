@@ -315,6 +315,8 @@ class TerraReact: NSObject {
             return [HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN)].compactMap { $0 }
         case "SWIMMING_SUMMARY":
             return [HKQuantityType.quantityType(forIdentifier: .swimmingStrokeCount)].compactMap { $0 }
+        case "LOCATION":
+            return [HKSeriesType.workoutRoute()]
         // Extra activity / fitness types
         case "DISTANCE_CYCLING":
             return [HKQuantityType.quantityType(forIdentifier: .distanceCycling)].compactMap { $0 }
@@ -471,11 +473,14 @@ class TerraReact: NSObject {
             let readPermissionKeys = customPermissions.isEmpty
                 ? Self.allReadPermissionKeys
                 : customPermissions
+            let healthKitReadPermissionKeys = customPermissions.isEmpty
+                ? readPermissionKeys
+                : Array(Set(readPermissionKeys + Self.supplementalReadPermissionKeys))
             let writePermissionKeys = customWritePermissions.isEmpty
                 ? Self.allWritePermissionKeys
                 : customWritePermissions
 
-            requestedReadPermissionKeys = readPermissionKeys
+            requestedReadPermissionKeys = healthKitReadPermissionKeys
             requestedWritePermissionKeys = writePermissionKeys
 
             // The native SDK has no concept of write permissions, so request the
@@ -484,7 +489,7 @@ class TerraReact: NSObject {
             let writeHKTypes: Set<HKSampleType> = Set(safeWriteKeys.compactMap { hkSampleType(for: $0) })
 
             var readHKTypes = Set<HKObjectType>()
-            for key in readPermissionKeys {
+            for key in healthKitReadPermissionKeys {
                 readHKTypes.formUnion(hkReadTypes(for: key))
             }
 
@@ -1102,6 +1107,13 @@ class TerraReact: NSObject {
         "NUTRITION_VITAMIN_D", "NUTRITION_VITAMIN_E",
         "NUTRITION_VITAMIN_K", "NUTRITION_ZINC",
         // iOS 17+ types
+        "CYCLING_CADENCE", "CYCLING_POWER", "CYCLING_SPEED",
+        "WRIST_TEMPERATURE",
+    ]
+
+    private static let supplementalReadPermissionKeys: [String] = [
+        "DISTANCE_CYCLING", "DISTANCE_SWIMMING", "DISTANCE_WHEELCHAIR",
+        "STAND_TIME", "HEARTBEAT_SERIES", "WALKING_SPEED",
         "CYCLING_CADENCE", "CYCLING_POWER", "CYCLING_SPEED",
         "WRIST_TEMPERATURE",
     ]
