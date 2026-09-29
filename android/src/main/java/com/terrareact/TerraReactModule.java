@@ -145,6 +145,10 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
                 return CustomPermissions.NUTRITION_WATER;
             case "NUTRITION_CHOLESTEROL":
                 return CustomPermissions.NUTRITION_CHOLESTEROL;
+            case "MENSTRUATION":
+                return CustomPermissions.MENSTRUATION;
+            case "INTERBEAT":
+                return CustomPermissions.INTERBEAT;
             case "POWER":
                 return CustomPermissions.POWER;
             case "SPEED":
@@ -205,10 +209,13 @@ public class TerraReactModule extends ReactContextBaseJavaModule {
         // Merge read and write permissions into a single set (Health Connect uses unified permissions)
         HashSet<CustomPermissions> cPermissions = new HashSet<>();
         for (Object customPermission: customPermissions.toArrayList()){
-            if (customPermission == null && parseCustomPermission((String) customPermission) == null){
+            if (customPermission == null){
                 continue;
             }
-            cPermissions.add(parseCustomPermission((String) customPermission));
+            CustomPermissions parsed = parseCustomPermission((String) customPermission);
+            if (parsed != null) {
+                cPermissions.add(parsed);
+            }
         }
         if (customWritePermissions != null) {
             for (Object writePermission : customWritePermissions.toArrayList()) {
